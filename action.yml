@@ -1,0 +1,78 @@
+name: "Repos Sync Action"
+description: "Cherry-pick dei commit mancanti da un repository sorgente verso quello che esegue l’action"
+
+inputs:
+  source_repo:
+    description: "owner/repo of source repository"
+    required: true
+  source_branch:
+    description: "Branch to cherry-pick commits from (default: dev)"
+    default: "dev"
+  target_branch:
+    description: "Branch of target repository to update (default: dev)"
+    default: "dev"
+  token:
+    description: "PAT with repo, read:org scope (and workflow if workflow updates are needed)"
+    required: true
+  pr_branch:
+    description: "Temporary branch name to push cherry-picks"
+    default: "sync/core"
+  pr_title:
+    description: "Title of the Pull Request"
+    default: "Sync Core"
+  pr_labels:
+    description: "Labels to apply to the PR (comma-separated)"
+    default: "sync-core"
+
+runs:
+  using: "composite"
+  steps:
+    - name: Checkout target
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0               
+        ref: ${{ inputs.target_branch }}
+        token: ${{ inputs.token }}
+
+    - name: Cherry-pick missing commits
+      shell: bash
+      run: |
+        bash "${{ github.action_path }}/sync.sh"
+      env:
+        SOURCE_REPO:    ${{ inputs.source_repo }}
+        SOURCE_BRANCH:  ${{ inputs.source_branch }}
+        TARGET_BRANCH:  ${{ inputs.target_branch }}
+        TOKEN:          ${{ inputs.token }}
+        PR_BRANCH:      ${{ format('{0}-{1}', inputs.pr_branch, github.run_id ) }}
+
+    - name: Ensure PR labels exist
+      if: env.PR_BRANCH_PUSHED == 'true' && inputs.pr_labels != ''
+      env:
+        GH_TOKEN: ${{ inputs.token }}
+      shell: bash
+      run: |
+        IFS=',' read -ra LABELS <<< "${{ inputs.pr_labels }}"
+        for label in "${LABELS[@]}"; do
+          label="$(echo "$label" | xargs)"   # trim spaces
+          if [[ -n "$label" ]]; then
+            # Create the label if it doesn't exist (ignore if already present)
+            if ! gh label list --limit 500 | cut -f1 | grep -Fxq "$label"; then
+              gh label create "$label" --description "Auto created by repos‑sync‑action" --color "2B7FFF" || true
+            fi
+          fi
+        done
+
+    - name: Create Pull Request
+      if: env.PR_BRANCH_PUSHED == 'true'
+      env:
+        GH_TOKEN: ${{ inputs.token }}
+        GITHUB_TOKEN: ${{ inputs.token }}
+      shell: bash
+      run: |
+        gh pr create \
+          --repo "$GITHUB_REPOSITORY" \
+          --head "$PR_BRANCH" \
+          --base "${{ inputs.target_branch }}" \
+          --title "${{ inputs.pr_title }}" \
+          --body "PR created by repos‑sync‑action" \
+          --label "${{ inputs.pr_labels }}"
