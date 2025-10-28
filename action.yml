@@ -36,6 +36,7 @@ runs:
         fetch-depth: 0
         ref: ${{ inputs.target_branch }}
         token: ${{ inputs.target_token }}
+        persist-credentials: false
 
     - name: Cherry-pick missing commits
       shell: bash

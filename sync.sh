@@ -12,11 +12,15 @@ echo "::group:: preparation"
 git config --global user.name 'MeblabsBot'
 git config --global user.email 'github@meblabs.com'
 
+git config --local --unset-all http.https://github.com/.extraheader || true
+
 if git remote | grep -q '^core$'; then
   git remote set-url core "https://x-access-token:${SOURCE_TOKEN}@github.com/${SOURCE_REPO}.git"
 else
   git remote add core "https://x-access-token:${SOURCE_TOKEN}@github.com/${SOURCE_REPO}.git"
 fi
+git remote -v
+
 git fetch core "${SOURCE_BRANCH}"
 
 # Create working branch
@@ -53,6 +57,7 @@ done
 echo "::endgroup::"
 
 echo "::group:: push & flag PR"
+git config --local --unset-all http.https://github.com/.extraheader || true
 git remote set-url origin "https://x-access-token:${TARGET_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
 git push --force-with-lease -u origin "${PR_BRANCH}"
 
