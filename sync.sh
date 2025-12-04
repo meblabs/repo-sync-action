@@ -2,7 +2,6 @@
 
 set -euo pipefail
 set -x
-
 echo "::group:: preparation"
 
 # Mask tokens in logs
@@ -36,6 +35,9 @@ git checkout -B "${PR_BRANCH}" "origin/${TARGET_BRANCH}"
 echo "::endgroup::"
 echo "::group:: calculating missing commits"
 
+# git cherry shows from oldest → newest.
+# We read in reverse (tac) to start from the newest and
+# collect the "+" until we encounter the first "-" (already present in the target).
 MISSING=$(git cherry -v "${TARGET_BRANCH}" "core/${SOURCE_BRANCH}" \
           | tac \
           | awk '$1=="-" {exit} $1=="+" {print $2}' \
@@ -85,7 +87,6 @@ echo "::endgroup::"
 if [[ "${APPLIED_NONEMPTY}" != "true" ]]; then
   echo "::group:: no effective changes"
   echo "All missing commits were empty on the target branch. Nothing to push."
-  # PR_BRANCH_PUSHED=false is already in $GITHUB_ENV
   echo "::endgroup::"
   exit 0
 fi
