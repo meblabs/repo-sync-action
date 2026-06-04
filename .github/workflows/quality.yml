@@ -44,7 +44,7 @@ jobs:
         run: |
           set -euo pipefail
           # Pre-installed on ubuntu-latest runners.
-          shellcheck setup.sh
+          shellcheck sync.sh
 
   gitleaks:
     name: gitleaks
