@@ -1,5 +1,9 @@
 # repo-sync-action
 
+[![quality](https://github.com/meblabs/repo-sync-action/actions/workflows/quality.yml/badge.svg)](https://github.com/meblabs/repo-sync-action/actions/workflows/quality.yml)
+![type](https://img.shields.io/badge/github-Composite%20Action-blue?logo=github)
+[![](https://img.shields.io/static/v1?label=MEBlabs&message=%E2%9D%A4&logo=GitHub&color=%23fe8e86)](https://github.com/sponsors/meblabs)
+
 Composite GitHub Action to sync repos commits
 
 Automated **commit-level sync** between a “core” repository and one or more
