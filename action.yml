@@ -54,9 +54,10 @@ runs:
       if: env.PR_BRANCH_PUSHED == 'true' && inputs.pr_labels != ''
       env:
         GH_TOKEN: ${{ inputs.target_token }}
+        PR_LABELS: ${{ inputs.pr_labels }}
       shell: bash
       run: |
-        IFS=',' read -ra LABELS <<< "${{ inputs.pr_labels }}"
+        IFS=',' read -ra LABELS <<< "$PR_LABELS"
         for label in "${LABELS[@]}"; do
           label="$(echo "$label" | xargs)"
           if [[ -n "$label" ]]; then
@@ -72,12 +73,15 @@ runs:
       env:
         GH_TOKEN: ${{ inputs.target_token }}
         GITHUB_TOKEN: ${{ inputs.target_token }}
+        BASE_BRANCH: ${{ inputs.target_branch }}
+        PR_TITLE: ${{ inputs.pr_title }}
+        PR_LABELS: ${{ inputs.pr_labels }}
       shell: bash
       run: |
         gh pr create \
           --repo "$GITHUB_REPOSITORY" \
           --head "$PR_BRANCH" \
-          --base "${{ inputs.target_branch }}" \
-          --title "${{ inputs.pr_title }}" \
+          --base "$BASE_BRANCH" \
+          --title "$PR_TITLE" \
           --body "PR created by repos-sync-action" \
-          --label "${{ inputs.pr_labels }}"
+          --label "$PR_LABELS"

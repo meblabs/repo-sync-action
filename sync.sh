@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 
 set -euo pipefail
-set -x
 echo "::group:: preparation"
 
 # Mask tokens in logs
